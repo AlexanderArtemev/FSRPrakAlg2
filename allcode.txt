@@ -1,0 +1,91 @@
+#include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+struct Th {
+    int val;
+    int wei;
+    int n;
+};
+
+class Parser {
+private:
+    int N;
+    int W;
+    Th* arr;
+
+public:
+    Parser(const string& fileName) {
+        ifstream inputFile(fileName);
+        int i;
+        inputFile >> N >> W;
+        arr = new Th[N];
+        for (i = 0; i < N; i++) {
+            inputFile >> arr[i].val >> arr[i].wei;
+        }
+        inputFile.close();
+    }
+    ~Parser() {
+        delete[] arr;
+    }
+    int getN() const { return N; }
+    int getW() const { return W; }
+    Th* getA() const { return arr; }
+};
+
+struct Solver {
+    static void answer(int W, Th arr[], int N) {
+        vector<vector<int>> h(N + 1, vector<int>(W + 1, 0));
+        int global_W = 0;
+        vector<int> t_th(N, 0);
+        int reW = W;
+        int i = 0;
+        int w;
+        while (i < N) {
+            w = 0;
+            while (w < W) {
+                if (arr[i].wei <= w+1) {
+                    int t = h[i][w+1 - arr[i].wei] + arr[i].val;
+                    int n_t = h[i][w+1];
+                    h[i+1][w+1] = max(t, n_t);
+                } else {
+                    h[i+1][w+1] = h[i][w+1];
+                }
+                w++;
+            }
+            i++;
+        }
+        cout << h[N][W];
+        i = N;
+        while (i > 0 && h[N][W] > 0) {
+            if (h[N][W] != h[i - 1][reW]) {
+                t_th[i - 1] = 1;
+                h[N][W] -= arr[i - 1].val;
+                global_W += arr[i - 1].wei;
+                reW -= arr[i - 1].wei;
+            }
+            i--;
+        }
+        if (W-global_W<0){
+            cout<<"error"<<endl;
+        }
+        W = W-global_W;
+        cout << " " << W << endl;
+        for (int i = 0; i < N; ++i) {
+            cout << t_th[i] << " ";
+        }
+    }
+};
+
+int main() {
+    string inputFileName = "input.txt";
+    Parser parser(inputFileName);
+    int W = parser.getW();
+    Th* arr = parser.getA();
+    int N = parser.getN();
+    Solver::answer(W, arr, N);
+    return 0;
+}
